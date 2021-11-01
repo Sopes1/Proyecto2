@@ -1,0 +1,1 @@
+rungame --gamename "1 | Game1 | 2 | Game2" --players 30 --rungames 10000 --concurrence 10 --timeout 1m

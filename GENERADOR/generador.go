@@ -14,6 +14,7 @@ var reader = bufio.NewReader(os.Stdin)
 var gamesNumber []string
 var gamesName []string
 var players, rungames, concurrence, timeout int
+var url = ""
 
 type Datos struct {
 	Game     string
@@ -104,7 +105,7 @@ func ejectuar() {
 	var stop = false
 	for true {
 		for i := 0; i < concurrence; i++ {
-			go enviarDatos(newJSON())
+			go enviarDatos(newJSON(), i)
 			totalGames++
 			if totalGames >= rungames {
 				stop = true
@@ -140,8 +141,21 @@ func newJSON() Datos {
 	return Datos{Game: game, GameName: name, Players: nplayers}
 }
 
-func enviarDatos(dato Datos) {
-	fmt.Print(dato)
+func enviarDatos(dato Datos, i int) {
+	fmt.Print(i)
+	fmt.Println(dato)
+	/*data, _ := json.Marshal(dato)
+	requestBody := bytes.NewBuffer(data)
+
+	req, err := http.Post(url, "application/json", requestBody)
+
+	if err != nil {
+		fmt.Print("No se pudo enviar la peticion")
+		return
+	}
+
+	defer req.Body.Close()*/
+
 }
 
 //Auxiliares
