@@ -1,0 +1,7 @@
+### Redis Comandos
+
+	##Generar Lista
+	
+	lpush [nombre] [valores]
+		
+		lpush Logs "{request_number:1, game:1, gamename:JUEGO1, winner: 10, players:30, worker:RabbitMQ}"
