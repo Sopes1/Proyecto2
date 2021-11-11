@@ -5,7 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
+	"os"
+	
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gorilla/mux"
 )
@@ -65,8 +66,8 @@ func saveGameKafka(game DataGame){
 
 	gameString := string(jsonString)
 	fmt.Print(gameString)
-
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost:29092"})
+	host:=os.Getenv("QKHOST") +":29092"
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": host})
 	if err != nil {
 		panic(err)
 	}
