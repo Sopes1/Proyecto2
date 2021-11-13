@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	URI = "mongodb://mongo_admin:SopesP2_2021@3" + os.Getenv("MHOST") + ":27017/admin"
+	URI = "mongodb://mongo_admin:SopesP2_2021@" + os.Getenv("MHOST") + ":27017/admin"
 )
 
 var count = 1
@@ -95,9 +95,9 @@ func workerRabbit() {
 			rand.Seed(time.Now().UnixNano())
 			winner := strconv.Itoa(rand.Intn(players) + 1)
 
-			//newGameMongo(Game{Game: idGame, Gamename: gameName, Players: splittedBody[2], Winner: winner})
+			newGameMongo(Game{Game: idGame, Gamename: gameName, Players: splittedBody[2], Winner: winner})
 			newGameRedis(Game{Game: idGame, Gamename: gameName, Players: splittedBody[2], Winner: winner})
-			//newLogMongo(Log{Request_Game: count, Game: idGame, Gamename: gameName, Players: splittedBody[2], Winner: winner, Worker: "RabbitMQ"})
+			newLogMongo(Log{Request_Game: count, Game: idGame, Gamename: gameName, Players: splittedBody[2], Winner: winner, Worker: "RabbitMQ"})
 			count++
 			log.Print("Ganador: " + winner)
 
@@ -155,7 +155,7 @@ func newLogMongo(data Log) bool {
 func newGameRedis(data Game) {
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("RHOST"),
+		Addr:     os.Getenv("RHOST") + ":6379",
 		Password: "",
 		DB:       0,
 	})

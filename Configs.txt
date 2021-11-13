@@ -60,9 +60,25 @@
 	
 	## Ver ingress en el namespace squidgame
 	
+	## CHAOS MESH
+	
+	# Descargar chaos mesh una vez 
+	#curl -sSL https://mirrors.chaos-mesh.org/v2.0.3/install.sh | bash
+	
+	# Abir el dashboard
+	kubectl port-forward -n chaos-testing svc/chaos-dashboard 2333:2333
+	
+	# Aplicar experimento
+	kubectl apply -f pod-experiments.yaml
+	
+	# Eliminar experimento
+	kubectl delete -f pod-experiments.yaml
 	
 
 $$ Despues de cada comando introducido al archivo se le ponen 3 rayitas --- para seguir escribiendo y separar los comandos
+
+## Ver proyecto actual
+gcloud config get-value project
 	
 # Borrar Cluster
 gcloud container clusters delete [CLUSTER_NAME]
@@ -84,6 +100,9 @@ kubectl get pods -n squidgame
 
 # Ver que hay dentro de un pod
 kubectl describe pods [nombrePod] -n squidgame
+
+# Abrir consola Ingress
+linkerd viz dashboard 
 
 
 	

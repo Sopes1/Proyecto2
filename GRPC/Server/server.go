@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"net"
 
 	"github.com/streadway/amqp"
 
-	pb "../proto"
+	pb "servidor/proto"
+
 	"google.golang.org/grpc"
 )
 
@@ -39,7 +41,15 @@ func (*server) Game(ctx context.Context, req *pb.GameRequest) (*pb.GameResponse,
 	gameName := req.GetGame().GetGamename()
 	players := req.GetGame().GetPlayers()
 
-	RabbitMQ(idGame, gameName, players)
+	switch os.Getenv("COLA") {
+	case "rabbit":
+		RabbitMQ(idGame, gameName, players)
+		break
+	case "kafka":
+		break
+	case "pubsub":
+		break
+	}
 
 	result := "200"
 	fmt.Printf(">> SERVER: %s\n", result)
@@ -53,7 +63,7 @@ func (*server) Game(ctx context.Context, req *pb.GameRequest) (*pb.GameResponse,
 }
 
 func RabbitMQ(idGame string, gameName string, players string) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial("amqp://guest:guest@" + os.Getenv("RHOST") + ":5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 	ch, err := conn.Channel()

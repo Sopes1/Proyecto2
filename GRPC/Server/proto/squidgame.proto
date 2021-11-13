@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package squidgame;
+option go_package="./proto";
+
+message Game {
+    string game = 1;
+    string gamename = 2;
+    string players = 3;
+}
+
+message GameRequest {
+    Game game = 1;
+}
+
+message GameResponse {
+    string result = 1;
+}
+
+service GameService{
+    rpc Game(GameRequest) returns (GameResponse) {};
+}

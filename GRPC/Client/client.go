@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 
-	greetpb "../proto"
+	greetpb "servidor/proto"
 )
 
 type Health struct {
@@ -105,7 +105,7 @@ func main() {
 	router.HandleFunc("/", root).Methods("GET")
 	router.HandleFunc("/sendData", sendData).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":3000", router))
+	log.Fatal(http.ListenAndServe(":3200", router))
 
 	//sendMessage("1", "GAME 1", 30)
 }

@@ -1,0 +1,260 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: squidgame
+spec: {}
+status: {}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: error-injector
+  namespace: squidgame
+data:
+ nginx.conf: |-
+    events {}
+    http {
+        server {
+          listen 3200;
+            location / {
+                return 500;
+            }
+        }
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: error-injector
+  namespace: squidgame
+  labels:
+    app: error-injector
+spec:
+  selector:
+    matchLabels:
+      app: error-injector
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: error-injector
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: error-injector
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: error-injector
+  namespace: squidgame
+spec:
+  ports:
+  - name: service
+    port: 3200
+  selector:
+    app: error-injector
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: rabbitbroker
+  name: rabbitbroker
+  namespace: squidgame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitbroker
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: rabbitbroker
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      containers:
+      - image: juanpa99/brokerrabbit
+        name: brokerrabbit
+        resources: {}
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: rabbitbroker
+  name: rabbitbroker
+  namespace: squidgame
+spec:
+  ports:
+  - name: port-1
+    port: 5672
+    protocol: TCP
+    targetPort: 5672
+  - name: port-2
+    port: 15672
+    protocol: TCP
+    targetPort: 15672
+  selector:
+    app: rabbitbroker
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grpc-deployment-rabbit
+  name: grpc-deployment-rabbit
+  namespace: squidgame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-deployment-rabbit
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: grpc-deployment-rabbit
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      hostname: grpc-pod-host
+      containers:
+      - image: juanpa99/grpcserver:v1
+        name: grpcserver
+        env:
+          - name: RHOST
+            value: rabbitbroker
+        ports:
+          - containerPort: 50051
+      - image: juanpa99/grpcclient:v1
+        name: grpcclient
+        ports: 
+          - containerPort: 3200
+status: {} 
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: rabbitworker
+  name: rabbitworker
+  namespace: squidgame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitworker
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: rabbitworker
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      containers:
+      - image: juanpa99/workerrabbit:latest
+        name: rabbitworker
+        env:
+          - name: QRHOST
+            value: rabbitbroker
+          - name: MHOST
+            value: 34.133.125.208
+          - name: RHOST
+            value: 34.70.43.78
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grpc-deployment-rabbit
+  name: grpc-deployment-rabbit
+  namespace: squidgame
+spec:
+  type: ClusterIP
+  selector:
+    app: grpc-deployment-rabbit
+  ports:
+    - port: 3200
+      targetPort: 3200
+      protocol: TCP
+
+---
+
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata: 
+  name: minimal-ingress 
+  annotations: 
+    kubernetes.io/ingress.class: nginx 
+    nginx.ingress.kubernetes.io/rewrite-target: / 
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+  namespace: squidgame
+spec: 
+  rules: 
+  - host: 34.70.165.178.nip.io
+    http: 
+      paths: 
+      - path: /
+        pathType: Prefix 
+        backend: 
+          service: 
+            name: grpc-deployment-rabbit 
+            port: 
+              number: 3200
+
+---
+
+apiVersion: split.smi-spec.io/v1alpha1
+kind: TrafficSplit
+metadata:
+  name: trspl
+  namespace: squidgame
+spec:
+  service: grpc-deployment-rabbit
+  backends:
+  - service: grpc-deployment-rabbit
+    weight: 500m
+  - service: error-injector
+    weight: 500m 
+ 

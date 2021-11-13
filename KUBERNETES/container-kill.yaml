@@ -1,0 +1,22 @@
+kind: Schedule
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  name: experiment3
+  namespace: chaos-testing-container-kill
+#  annotations:
+#    experiment.chaos-mesh.org/pause: 'false'
+spec:
+  schedule: '@every 15s'
+  startingDeadlineSeconds: null
+  concurrencyPolicy: Forbid
+  historyLimit: 1
+  type: PodChaos
+  podChaos:
+    selector:
+      namespaces:
+        - squidgame
+    mode: one
+    action: container-kill
+    containerNames: ['containerName']
+    duration: 5m
+    gracePeriod: 0
