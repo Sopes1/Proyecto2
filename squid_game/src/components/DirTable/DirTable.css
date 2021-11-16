@@ -1,0 +1,12 @@
+.iconTable{
+    color: rgb(104, 104, 104);
+    margin-right: 20px;
+}
+
+.rowTable{
+    cursor: pointer;
+}
+
+.rowTable:hover{
+    background-color: rgb(228, 228, 228);
+}
