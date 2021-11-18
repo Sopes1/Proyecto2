@@ -35,12 +35,11 @@ async function getLast() {
     .toArray();
   return result;
 }
-
+function mydata(label, cuenta) {
+  this.label = label;
+  this.y = cuenta;
+}
 async function getWorkers() {
-  let data = {
-    label: "",
-    y: 0,
-  };
   let datapoint = [];
   const result = await client
     .db("Proyecto2Sopes")
@@ -57,9 +56,7 @@ async function getWorkers() {
     .toArray();
   console.log(result);
   result.map((row) => {
-    data.label = row._id;
-    data.y = row.count;
-    datapoint.push(data);
+    datapoint.push(new mydata(row._id, row.count));
   });
   return datapoint;
 }
@@ -84,9 +81,7 @@ async function getTopGame() {
     .toArray();
   console.log(result);
   result.map((row) => {
-    data.label = row._id;
-    data.y = row.count;
-    datapoint.push(data);
+    datapoint.push(new mydata(row._id, row.count));
   });
   return datapoint;
 }

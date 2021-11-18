@@ -18,11 +18,11 @@ class PieChart extends Component {
         {
           type: "pie",
           startAngle: 75,
-          toolTipContent: "<b>{label}</b>: {y}%",
+          toolTipContent: "<b>{label}</b>: {y}",
           showInLegend: "true",
           legendText: "{label}",
           indexLabelFontSize: 16,
-          indexLabel: "{label} - {y}%",
+          indexLabel: "{label} - {y}",
           dataPoints: this.props.datapoints,
         },
       ],

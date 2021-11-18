@@ -9,16 +9,8 @@ class Report extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      dataworks: [
-        { label: "worker Kafka", y: 30000 },
-        { label: "worker RabbitMQ", y: 35000 },
-        { label: "worker PubSub", y: 25000 },
-      ],
-      datagame: [
-        { label: "worker Kafka", y: 30000 },
-        { label: "worker RabbitMQ", y: 35000 },
-        { label: "worker PubSub", y: 25000 },
-      ],
+      dataworks: [],
+      datagame: [],
     };
   }
   componentDidMount() {

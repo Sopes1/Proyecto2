@@ -8,8 +8,8 @@ class PlayerStatus extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      player: "0001",
-      titlE: ["GAME", "GAME NAME", "STATUS"],
+      player: "1",
+      titlE: ["GAME", "GAME NAME", "WINNER", "#PLAYERS"],
       dataplayer: [],
     };
   }

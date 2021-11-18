@@ -19,13 +19,12 @@ const redisCliente = redis
     );
   });
 
-
 async function getlast() {
   return new Promise((resolve, reject) => {
     redisCliente.lrange("Game", 0, 9, (error, reply) => {
       let datas = [];
       reply.map((row) => {
-        datas.unshift(JSON.parse(row));
+        datas.push(JSON.parse(row));
       });
       return error ? reject(error) : resolve(datas);
     });
@@ -49,7 +48,7 @@ async function getall() {
         yield* [...this.entries()].sort((a, b) => b[1] - a[1]);
       };
       let ganar = Array.from(ganadores);
-      return err ? reject(err) : resolve(ganar.slice(0, 9));
+      return err ? reject(err) : resolve(ganar.slice(0, 10));
     });
   });
 }
@@ -70,7 +69,6 @@ async function getstatus(id_player) {
 }
 
 module.exports = {
-  insertdata,
   getall,
   getlast,
   getstatus,

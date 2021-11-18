@@ -8,12 +8,6 @@ class Topjuegos extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      dataE: [
-        { data1: "data1", data2: "data2", data3: "data3", data4: "data4" },
-        { obj1: "obj1", obj2: "obj2", obj3: "obj3", obj4: "obj4" },
-        { arr1: "arr1", arr2: "arr2", arr3: "arr3", arr4: "arr4" },
-        { vect1: "vect1", vect2: "vect2", vect3: "vect3", vect4: "vect4" },
-      ],
       titlE: ["title1", "title2", "title3", "title4"],
       datatop: [],
       datalast: [],
