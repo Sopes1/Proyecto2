@@ -2,8 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -14,12 +17,12 @@ var reader = bufio.NewReader(os.Stdin)
 var gamesNumber []string
 var gamesName []string
 var players, rungames, concurrence, timeout int
-var url = ""
+var url = "http://35.184.255.124.nip.io/sendData"
 
 type Datos struct {
-	Game     string
-	GameName string
-	Players  int
+	IdGame   string `json:"IdGame"`
+	GameName string `json:"GameName"`
+	Players  string `json:"Players"`
 }
 
 func main() {
@@ -136,25 +139,26 @@ func newJSON() Datos {
 	var index = rand.Intn(len(gamesName))
 	var game = gamesNumber[index]
 	var name = gamesName[index]
-	var nplayers = rand.Intn(players)
+	nplayers := strconv.Itoa(rand.Intn(players))
 
-	return Datos{Game: game, GameName: name, Players: nplayers}
+	return Datos{IdGame: game, GameName: name, Players: nplayers}
 }
 
 func enviarDatos(dato Datos, i int) {
 	fmt.Print(i)
 	fmt.Println(dato)
-	/*data, _ := json.Marshal(dato)
+	data, _ := json.Marshal(dato)
 	requestBody := bytes.NewBuffer(data)
 
 	req, err := http.Post(url, "application/json", requestBody)
 
 	if err != nil {
-		fmt.Print("No se pudo enviar la peticion")
+		fmt.Println("No se pudo enviar la peticion")
+		fmt.Println(err)
 		return
+	} else {
+		defer req.Body.Close()
 	}
-
-	defer req.Body.Close()*/
 
 }
 

@@ -60,10 +60,20 @@
 	
 	## Ver ingress en el namespace squidgame
 	
+	## INSTALAR STRIMZI
+	
+	# kubectl create namespace squidgame
+	
+	# kubectl create -f 'https://strimzi.io/install/latest?namespace=squidgame' -n squidgame
+	
+	# kubectl apply -f https://strimzi.io/examples/latest/kafka/kafka-persistent-single.yaml -n squidgame 
+	
+	# kubectl wait kafka/my-cluster --for=condition=Ready --timeout=300s -n squidgame
+	
 	## CHAOS MESH
 	
-	# Descargar chaos mesh una vez 
-	#curl -sSL https://mirrors.chaos-mesh.org/v2.0.3/install.sh | bash
+	# Descargar chaos mesh 
+	curl -sSL https://mirrors.chaos-mesh.org/v2.0.3/install.sh | bash
 	
 	# Abir el dashboard
 	kubectl port-forward -n chaos-testing svc/chaos-dashboard 2333:2333
@@ -73,6 +83,9 @@
 	
 	# Eliminar experimento
 	kubectl delete -f pod-experiments.yaml
+	
+	# DASHBOARD
+	http://localhost:2333/dashboard
 	
 
 $$ Despues de cada comando introducido al archivo se le ponen 3 rayitas --- para seguir escribiendo y separar los comandos

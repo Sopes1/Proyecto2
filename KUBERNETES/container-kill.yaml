@@ -2,7 +2,7 @@ kind: Schedule
 apiVersion: chaos-mesh.org/v1alpha1
 metadata:
   name: experiment3
-  namespace: chaos-testing-container-kill
+  namespace: chaos-testing
 #  annotations:
 #    experiment.chaos-mesh.org/pause: 'false'
 spec:
@@ -17,6 +17,6 @@ spec:
         - squidgame
     mode: one
     action: container-kill
-    containerNames: ['containerName']
-    duration: 5m
+    containerNames: ['juanpa99/grpcclient:v1']
+    duration: 1m
     gracePeriod: 0

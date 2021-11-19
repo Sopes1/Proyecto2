@@ -2,11 +2,11 @@ kind: Schedule
 apiVersion: chaos-mesh.org/v1alpha1
 metadata:
   name: experiment1
-  namespace: chaos-testing-pod-kill
+  namespace: chaos-testing
 #  annotations:
 #    experiment.chaos-mesh.org/pause: 'false'
 spec:
-  schedule: '@every 15s'
+  schedule: '@every 20s'
   startingDeadlineSeconds: null
   concurrencyPolicy: Forbid
   historyLimit: 1
@@ -16,8 +16,8 @@ spec:
       namespaces:
         - squidgame
       labelSelectors:
-        app: myapp
+        app: grpc-deployment-kafka
     mode: one
     action: pod-kill
-    duration: 5m
+    duration: 1m
     gracePeriod: 0

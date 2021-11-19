@@ -130,6 +130,126 @@ status:
 
 ---
 
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   creationTimestamp: null
+#   labels:
+#     app: kafkabroker
+#   name: kafkabroker
+#   namespace: squidgame
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: kafkabroker
+#   strategy: {}
+#   template:
+#     metadata:
+#       creationTimestamp: null
+#       labels:
+#         app: kafkabroker
+#       annotations:
+#         linkerd.io/inject: enabled
+#     spec:
+#       containers:
+#       - image: confluentinc/cp-zookeeper:6.2.1
+#         name: zookeper
+#         ports: 
+#           - containerPort: 2181
+#         env:
+#           - name: ZOOKEEPER_CLIENT_PORT
+#             value: '2181'
+#           - name: ZOOKEEPER_TICK_TIME
+#             value: '2000'
+#       - image: confluentinc/cp-kafka:6.2.1
+#         name: broker
+#         env:
+#           - name: KAFKA_BROKER_ID
+#             value: '1'
+#           - name: KAFKA_ZOOKEEPER_CONNECT
+#             value: zookeper:2181
+#           - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+#             value: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+#           - name: KAFKA_ADVERTISED_LISTENERS
+#             value: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
+#           - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+#             value: '1'
+#           - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+#             value: '0'
+#         ports: 
+#           - containerPort: 29092
+#         resources: {}
+# status: {}
+
+##################################################################################################
+
+# apiVersion: kafka.strimzi.io/v1beta2
+# kind: Kafka
+# metadata:
+#   name: my-cluster
+#   namespace: squidgame
+# spec:
+#   kafka:
+#     version: 3.0.0
+#     replicas: 3
+#     listeners:
+#       - name: plain
+#         port: 9092
+#         type: internal
+#         tls: false
+#       - name: tls
+#         port: 9093
+#         type: internal
+#         tls: true
+#     config:
+#       offsets.topic.replication.factor: 3
+#       transaction.state.log.replication.factor: 3
+#       transaction.state.log.min.isr: 2
+#       log.message.format.version: "3.0"
+#       inter.broker.protocol.version: "3.0"
+#     storage:
+#       type: ephemeral
+#   zookeeper:
+#     replicas: 3
+#     storage:
+#       type: ephemeral
+#   entityOperator:
+#     topicOperator: {}
+#     userOperator: {}
+
+
+
+# ##################################################################################################
+
+# ---
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   creationTimestamp: null
+#   labels:
+#     app: kafkabroker
+#   name: kafkabroker
+#   namespace: squidgame
+# spec:
+#   ports:
+#   - name: port-1
+#     port: 9092
+#     protocol: TCP
+#     targetPort: 9092
+#   - name: port-2
+#     port: 9093
+#     protocol: TCP
+#     targetPort: 9093
+#   selector:
+#     app: kafkabroker
+#   type: ClusterIP
+# status:
+#   loadBalancer: {}
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -152,18 +272,164 @@ spec:
     spec:
       hostname: grpc-pod-host
       containers:
-      - image: juanpa99/grpcserver:v1
+      - image: juanpa99/grpcserver:latest
         name: grpcserver
         env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: key.json
           - name: RHOST
             value: rabbitbroker
+          - name: QKHOST
+            value: kafkabroker
+          - name: COLA
+            value: rabbit
         ports:
           - containerPort: 50051
-      - image: juanpa99/grpcclient:v1
+      - image: juanpa99/grpcclient:v2
         name: grpcclient
         ports: 
           - containerPort: 3200
 status: {} 
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grpc-deployment-rabbit
+  name: grpc-deployment-rabbit
+  namespace: squidgame
+spec:
+  type: ClusterIP
+  selector:
+    app: grpc-deployment-rabbit
+  ports:
+    - port: 3200
+      targetPort: 3200
+      protocol: TCP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grpc-deployment-kafka
+  name: grpc-deployment-kafka
+  namespace: squidgame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-deployment-kafka
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: grpc-deployment-kafka
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      hostname: grpc-pod-host
+      containers:
+      - image: juanpa99/grpcserver:latest
+        name: grpcserver
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: key.json
+          - name: RHOST
+            value: rabbitbroker
+          - name: QKHOST
+            value: my-cluster-kafka-bootstrap
+          - name: COLA
+            value: kafka
+        ports:
+          - containerPort: 50051
+      - image: juanpa99/grpcclient:v2
+        name: grpcclient
+        ports: 
+          - containerPort: 3200
+status: {} 
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grpc-deployment-kafka
+  name: grpc-deployment-kafka
+  namespace: squidgame
+spec:
+  type: ClusterIP
+  selector:
+    app: grpc-deployment-kafka
+  ports:
+    - port: 3200
+      targetPort: 3200
+      protocol: TCP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grpc-deployment-pubsub
+  name: grpc-deployment-pubsub
+  namespace: squidgame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-deployment-pubsub
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: grpc-deployment-pubsub
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      hostname: grpc-pod-host
+      containers:
+      - image: juanpa99/grpcserver:latest
+        name: grpcserver
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: key.json
+          - name: RHOST
+            value: rabbitbroker
+          - name: QKHOST
+            value: kafkabroker
+          - name: COLA
+            value: pubsub
+        ports:
+          - containerPort: 50051
+      - image: juanpa99/grpcclient:v2
+        name: grpcclient
+        ports: 
+          - containerPort: 3200
+status: {} 
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grpc-deployment-pubsub
+  name: grpc-deployment-pubsub
+  namespace: squidgame
+spec:
+  type: ClusterIP
+  selector:
+    app: grpc-deployment-pubsub
+  ports:
+    - port: 3200
+      targetPort: 3200
+      protocol: TCP
 
 ---
 
@@ -196,65 +462,81 @@ spec:
           - name: QRHOST
             value: rabbitbroker
           - name: MHOST
-            value: 34.133.125.208
+            value: 35.202.121.215
           - name: RHOST
-            value: 34.70.43.78
+            value: 35.224.94.57
 status: {}
 
 ---
 
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: Deployment
 metadata:
+  creationTimestamp: null
   labels:
-    app: grpc-deployment-rabbit
-  name: grpc-deployment-rabbit
+    app: kafkaworker
+  name: kafkaworker
   namespace: squidgame
 spec:
-  type: ClusterIP
+  replicas: 1
   selector:
-    app: grpc-deployment-rabbit
-  ports:
-    - port: 3200
-      targetPort: 3200
-      protocol: TCP
+    matchLabels:
+      app: kafkaworker
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: kafkaworker
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      containers:
+      - image: ajuarez25/consumer-kaftka:latest
+        name: kafkaworker
+        env:
+          - name: QKHOST
+            value: my-cluster-kafka-bootstrap
+          - name: MHOST
+            value: 35.202.121.215
+          - name: RHOST
+            value: 35.224.94.57
+status: {}
 
 ---
 
-apiVersion: networking.k8s.io/v1 
-kind: Ingress 
-metadata: 
-  name: minimal-ingress 
-  annotations: 
-    kubernetes.io/ingress.class: nginx 
-    nginx.ingress.kubernetes.io/rewrite-target: / 
-    nginx.ingress.kubernetes.io/service-upstream: "true"
-  namespace: squidgame
-spec: 
-  rules: 
-  - host: 34.70.165.178.nip.io
-    http: 
-      paths: 
-      - path: /
-        pathType: Prefix 
-        backend: 
-          service: 
-            name: grpc-deployment-rabbit 
-            port: 
-              number: 3200
-
----
-
-apiVersion: split.smi-spec.io/v1alpha1
-kind: TrafficSplit
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: trspl
+  creationTimestamp: null
+  labels:
+    app: pubsubworker
+  name: pubsubworker
   namespace: squidgame
 spec:
-  service: grpc-deployment-rabbit
-  backends:
-  - service: grpc-deployment-rabbit
-    weight: 500m
-  - service: error-injector
-    weight: 500m 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pubsubworker
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: pubsubworker
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      containers:
+      - image: ajuarez25/consumer-pubsub:latest
+        name: pubsubworker
+        env:
+          - name: MHOST
+            value: 35.202.121.215
+          - name: RHOST
+            value: 35.224.94.57
+status: {}
+
+
+
  

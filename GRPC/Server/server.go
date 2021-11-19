@@ -13,6 +13,10 @@ import (
 	pb "servidor/proto"
 
 	"google.golang.org/grpc"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+
+	"cloud.google.com/go/pubsub"
 )
 
 type DataGame struct {
@@ -46,8 +50,10 @@ func (*server) Game(ctx context.Context, req *pb.GameRequest) (*pb.GameResponse,
 		RabbitMQ(idGame, gameName, players)
 		break
 	case "kafka":
+		saveGameKafka(idGame, gameName, players)
 		break
 	case "pubsub":
+		publish(idGame, gameName, players)
 		break
 	}
 
@@ -91,6 +97,71 @@ func RabbitMQ(idGame string, gameName string, players string) {
 			Body:        []byte(body),
 		})
 	failOnError(err, "Failed to publish a message")
+}
+
+func saveGameKafka(idGame string, gameName string, players string) {
+
+	host := os.Getenv("QKHOST")
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": host})
+	if err != nil {
+		panic(err)
+	}
+
+	body := idGame + "-" + gameName + "-" + players
+
+	// Produce messages to topic (asynchronously)
+	topic := "topic2"
+	for _, word := range []string{string(body)} {
+		p.Produce(&kafka.Message{
+			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+			Value:          []byte(word),
+		}, nil)
+	}
+}
+
+func publish(idGame string, gameName string, players string) error {
+	fmt.Println("save to pubsub")
+
+	// Definimos el ProjectID del proyecto
+	// Este dato lo sacamos de Google Cloud
+	projectID := "sopes1p2-330401" //goDotEnvVariable("PROJECT_ID")
+
+	// Definimos el TopicId del proyecto
+	// Este dato lo sacamos de Google Cloud
+	topicID := "sopesp2" //goDotEnvVariable("TOPIC_ID")
+
+	// Definimos el contexto en el que ejecutaremos PubSub
+	ctx := context.Background()
+	// Creamos un nuevo cliente
+	client, err := pubsub.NewClient(ctx, projectID)
+	// Si un error ocurrio creando el nuevo cliente, entonces imprimimos un error y salimos
+	if err != nil {
+		fmt.Println("error aqui")
+		fmt.Println(err)
+		return fmt.Errorf("pubsub.NewClient: %v", err)
+	}
+
+	// Obtenemos el topico al que queremos enviar el mensaje
+	t := client.Topic(topicID)
+
+	body := idGame + "-" + gameName + "-" + players
+
+	// Publicamos los datos del mensaje
+	result := t.Publish(ctx, &pubsub.Message{Data: []byte(body)})
+
+	// Bloquear el contexto hasta que se tenga una respuesta de parte de GooglePubSub
+	id, err := result.Get(ctx)
+
+	// Si hubo un error creando el mensaje, entonces mostrar que existio un error
+	if err != nil {
+		fmt.Println("error:")
+		fmt.Println(err)
+		return fmt.Errorf("Error: %v", err)
+	}
+
+	// El mensaje fue publicado correctamente
+	fmt.Printf("Published a message; msg ID: %v\n", id)
+	return nil
 }
 
 // Funcion principal

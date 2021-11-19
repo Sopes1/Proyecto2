@@ -2,11 +2,11 @@ kind: Schedule
 apiVersion: chaos-mesh.org/v1alpha1
 metadata:
   name: experiment2
-  namespace: chaos-testing-pod-failure
+  namespace: chaos-testing
 #  annotations:
 #    experiment.chaos-mesh.org/pause: 'false'
 spec:
-  schedule: '@every 15s'
+  schedule: '@every 10s'
   startingDeadlineSeconds: null
   concurrencyPolicy: Forbid
   historyLimit: 1
@@ -16,8 +16,8 @@ spec:
       namespaces:
         - squidgame
       labelSelectors:
-        app: myapp
+        app: grpc-deployment-pubsub
     mode: one
     action: pod-failure
-    duration: 30s
+    duration: 1m
     gracePeriod: 0

@@ -1,0 +1,70 @@
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata: 
+  name: front-ingress 
+  annotations: 
+    kubernetes.io/ingress.class: nginx 
+    nginx.ingress.kubernetes.io/rewrite-target: / 
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    nginx.ingress.kubernetes.io/websocket-services: "backend"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  namespace: squidgame
+spec: 
+  rules: 
+  - host: 35.184.255.124.nip.io
+    http: 
+      paths: 
+      - path: /
+        pathType: Prefix 
+        backend: 
+          service: 
+            name: frontend 
+            port: 
+              number: 3000
+
+---
+
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata: 
+  name: back-ingress 
+  annotations: 
+    kubernetes.io/ingress.class: nginx 
+    nginx.ingress.kubernetes.io/rewrite-target: /sendData 
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    nginx.ingress.kubernetes.io/websocket-services: "backend"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  namespace: squidgame
+spec: 
+  rules: 
+  - host: 35.184.255.124.nip.io
+    http: 
+      paths: 
+      - path: /sendData
+        pathType: Prefix 
+        backend: 
+          service: 
+            name: grpc-deployment-kafka 
+            port: 
+              number: 3200
+
+---
+
+apiVersion: split.smi-spec.io/v1alpha1
+kind: TrafficSplit
+metadata:
+  name: trspl
+  namespace: squidgame
+spec:
+  service: grpc-deployment-kafka
+  backends:
+  - service: grpc-deployment-rabbit
+    weight: 200m
+  - service: grpc-deployment-kafka
+    weight: 200m
+  - service: grpc-deployment-pubsub
+    weight: 200m
+  - service: error-injector
+    weight: 400m 

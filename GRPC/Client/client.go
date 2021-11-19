@@ -103,7 +103,7 @@ func main() {
 	router := mux.NewRouter()
 	//Ruta para combrobar conexion
 	router.HandleFunc("/", root).Methods("GET")
-	router.HandleFunc("/sendData", sendData).Methods("GET")
+	router.HandleFunc("/sendData", sendData).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":3200", router))
 

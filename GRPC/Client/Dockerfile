@@ -18,4 +18,4 @@ CMD ["go","run","client.go"]
 
 # docker build -t grpcclient .
 
-## docker run -it --rm --name grpcclient -p 3200:3200 grpcclient:latest
+## docker run -it --rm --name grpcclienttt -p 3200:3200 grpcclient:latest

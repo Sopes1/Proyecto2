@@ -1,0 +1,25 @@
+kind: Schedule
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  name: experiment5
+  namespace: chaos-testing
+#  annotations:
+#    experiment.chaos-mesh.org/pause: 'false'
+spec:
+  schedule: '@every 5s'
+  startingDeadlineSeconds: null
+  concurrencyPolicy: Forbid
+  historyLimit: 1
+  type: DNSChaos
+  podChaos:
+    selector:
+      namespaces:
+        - squidgame
+      labelSelectors:
+        app: myapp
+    mode: all
+    action: pod-kill
+    # patterns:
+    #   - 35.222.183.224.nip.io/*
+    duration: 1m
+    gracePeriod: 0

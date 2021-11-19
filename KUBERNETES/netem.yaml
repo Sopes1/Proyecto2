@@ -2,7 +2,7 @@ kind: Schedule
 apiVersion: chaos-mesh.org/v1alpha1
 metadata:
   name: experiment4
-  namespace: chaos-testing-netem
+  namespace: chaos-testing
 #  annotations:
 #    experiment.chaos-mesh.org/pause: 'false'
 spec:
@@ -16,11 +16,11 @@ spec:
       namespaces:
         - squidgame
       labelSelectors:
-        app: myapp
+        app: grpc-deployment-rabbit
     mode: one
     action: delay
     delay:
       latency: '10ms'
       correlation: '100'
       jitter: '0ms'
-    duration: 5m
+    duration: 1m

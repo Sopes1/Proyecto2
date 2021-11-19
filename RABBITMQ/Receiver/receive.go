@@ -161,7 +161,7 @@ func newGameRedis(data Game) {
 	})
 
 	dg, _ := json.Marshal(data)
-	_, err := rdb.Do(ctx, "rpush", "Game", dg).Result()
+	_, err := rdb.Do(ctx, "lpush", "Game", dg).Result()
 
 	if err != nil {
 		panic(err)
